@@ -7,3 +7,12 @@ Additionally, it provides the ability to automatically enter Do-Not-Disturb mode
 slack-token: <YOUR SLACK TOKEN>
 ```
 
+To launch the application, make sure all dependencies are installed.
+```
+pip install -r requirements.txt
+```
+The application itself can be started via
+```
+python -m taskwpomo
+```
+
