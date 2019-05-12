@@ -4,9 +4,11 @@ __license__ = 'MIT License'
 
 import datetime
 import logging
+import os
 import unittest.mock
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from taskwpomo.config import options
@@ -14,6 +16,8 @@ from taskwpomo.ext import Slack, TaskWarrior
 from taskwpomo.pomo import Pomodoro
 
 log = logging.getLogger(__name__)
+
+READY_SOUND = os.path.join(os.path.dirname(__file__), 'data', 'GlassPing.wav')
 
 
 class MainWindow(QWidget):
@@ -128,3 +132,4 @@ class MainWindow(QWidget):
         else:
             self.pomo.complete()
             self.stop_session()
+            #  QSound.play(READY_SOUND)
