@@ -31,7 +31,7 @@ class ImmutableDictMixin(object):
 
 class Configuration(collections.UserDict, ImmutableDictMixin):
 
-    file = os.path.join(os.path.expanduser('~'), '.taskwpomo.yml')
+    file = os.path.join(os.path.expanduser('~'), '.taskwpomo')
     if not os.path.isfile(file):
         open(file, 'w').close()
 
