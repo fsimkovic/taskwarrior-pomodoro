@@ -1,3 +1,6 @@
+__author__ = 'Felix Simkovic'
+__date__ = '2019-05-11'
+__license__ = 'MIT License'
 
 import collections
 import logging
@@ -5,11 +8,12 @@ import os
 import sys
 import yaml
 
-
 logger = logging.getLogger(__name__)
+
 
 class DictLockedError(Exception):
     pass
+
 
 class ImmutableDictMixin(object):
     _locked = False

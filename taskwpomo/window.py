@@ -1,3 +1,7 @@
+__author__ = 'Felix Simkovic'
+__date__ = '2019-05-11'
+__license__ = 'MIT License'
+
 import datetime
 import logging
 import unittest.mock
@@ -5,7 +9,7 @@ import unittest.mock
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
-from taskwpomo.config import options 
+from taskwpomo.config import options
 from taskwpomo.ext import Slack, TaskWarrior
 from taskwpomo.pomo import Pomodoro
 
