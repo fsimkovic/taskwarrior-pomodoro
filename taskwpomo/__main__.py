@@ -7,6 +7,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
+from taskwpomo import APPLICATION_NAME
 from taskwpomo.timer import Timer
 from taskwpomo.window import MainWindow
 
@@ -16,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+    app.setApplicationName(APPLICATION_NAME)
 
     window = MainWindow()
     window.show()
