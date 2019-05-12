@@ -12,9 +12,9 @@ log = logging.getLogger(__name__)
 
 @enum.unique
 class PomodoroTimes(enum.Enum):
-    LONG_BREAK = 2
-    SHORT_BREAK = 1
-    WORK = 3
+    LONG_BREAK = 1_200
+    SHORT_BREAK = 300
+    WORK = 1_500
 
 
 class Pomodoro:
