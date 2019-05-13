@@ -28,10 +28,13 @@ class Slack:
 class TaskWarrior(TaskWarrior):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self._active = False
         self._displayed = []
         self._selected = None
+
+    @property
+    def is_running(self):
+        return self._active
 
     @property
     def tasks2display(self):

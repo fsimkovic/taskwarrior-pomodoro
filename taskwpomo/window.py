@@ -17,7 +17,7 @@ from taskwpomo.pomo import Pomodoro
 
 log = logging.getLogger(__name__)
 
-READY_SOUND = os.path.join(os.path.dirname(__file__), 'data', 'GlassPing.wav')
+READY_SOUND = os.path.join(os.path.dirname(__file__), 'data', 'ding.wav')
 
 
 class MainWindow(QWidget):
@@ -33,6 +33,7 @@ class MainWindow(QWidget):
 
         # TODO: refactor this logic out of here
         self._pomo_start_ts = None
+        self._chime = QSound(READY_SOUND)
 
         self.initUI()
 
@@ -64,7 +65,7 @@ class MainWindow(QWidget):
         grid.addWidget(self.dropdown, 4, 0, Qt.AlignCenter)
 
         self.complete_btn = QPushButton('Completed', self)
-        self.complete_btn.clicked.connect(self.taskw.complete_selected_task)
+        self.complete_btn.clicked.connect(self.on_click_complete_btn)
         grid.addWidget(self.complete_btn, 4, 3, 1, 1)
 
         self.update_timer_lbl()
@@ -75,6 +76,10 @@ class MainWindow(QWidget):
             self.start_session()
         else:
             self.stop_session()
+
+    def on_click_complete_btn(self):
+        self.stop_session()
+        self.taskw.complete_selected_task()
 
     def on_click_skip_btn(self):
         log.info('Skip pomodoro session')
@@ -90,20 +95,19 @@ class MainWindow(QWidget):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(False)
         if self.pomo.is_work_task:
+            self.complete_btn.setEnabled(True)
             self.taskw.start_selected_task()
             self.slack.enable_dnd()
         self._pomo_start_ts = datetime.datetime.now()
-        self.update_timer_lbl()
         self.main_btn.setText('Stop')
 
     def stop_session(self):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(True)
-        if self.pomo.is_work_task:
+        if self.taskw.is_running:
             self.taskw.stop_selected_task()
             self.slack.disable_dnd()
         self._pomo_start_ts = None
-        self.update_timer_lbl()
         self.main_btn.setText('Start')
 
     def refresh_dropdown(self):
@@ -132,4 +136,4 @@ class MainWindow(QWidget):
         else:
             self.pomo.complete()
             self.stop_session()
-            #  QSound.play(READY_SOUND)
+            self._chime.play()
