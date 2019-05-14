@@ -16,13 +16,11 @@ class Slack:
 
     def disable_dnd(self):
         log.info('Stopping Slack Do-Not-Disturb Mode')
-        self.client.dnd_endSnooze().validate()
-        self._active = False
+        self.client.dnd_endSnooze()
 
     def enable_dnd(self, n_min=25):
         log.info('Starting Slack Do-Not-Disturb Mode')
-        self.client.dnd_setSnooze(num_minutes=n_min).validate()
-        self._active = True
+        self.client.dnd_setSnooze(num_minutes=n_min)
 
 
 class TaskWarrior(TaskWarrior):

@@ -97,7 +97,7 @@ class MainWindow(QWidget):
         if self.pomo.is_work_task:
             self.complete_btn.setEnabled(True)
             self.taskw.start_selected_task()
-            self.slack.enable_dnd()
+            self.slack.enable_dnd(n_min=self.pomo.current.value // 60)
         self._pomo_start_ts = datetime.datetime.now()
         self.main_btn.setText('Stop')
 
