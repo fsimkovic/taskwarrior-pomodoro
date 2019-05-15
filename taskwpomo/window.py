@@ -36,7 +36,7 @@ class MainWindow(QWidget):
 
         # TODO: refactor this logic out of here
         self._pomo_start_ts = None
-        self._chime = QSound(READY_SOUND)
+        #  self.chime = QSound(READY_SOUND)
 
         self.initUI()
 
@@ -140,6 +140,6 @@ class MainWindow(QWidget):
         if pomo.seconds > 0:
             self.timer_lbl.setText("{:02}:{:02}".format(pomo.seconds // 60, pomo.seconds % 60))
         else:
-            self.pomo.complete()
+            self.threadpool.start(Worker(self.pomo.complete))
+            #  self.threadpool.start(Worker(self.chime.play))
             self.stop_session()
-            self._chime.play()
