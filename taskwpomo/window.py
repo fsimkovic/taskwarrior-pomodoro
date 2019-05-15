@@ -7,6 +7,7 @@ import logging
 import os
 import unittest.mock
 
+from PyQt5.Qt import QThreadPool
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtMultimedia import QSound
@@ -15,6 +16,7 @@ from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushBu
 from taskwpomo.config import options
 from taskwpomo.ext import Slack, TaskWarrior
 from taskwpomo.pomo import Pomodoro
+from taskwpomo.worker import Worker
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +72,8 @@ class MainWindow(QWidget):
         self.complete_btn.clicked.connect(self.on_click_complete_btn)
         grid.addWidget(self.complete_btn, 4, 3, 1, 1)
 
+        self.threadpool = QThreadPool()
+
         self.update_timer_lbl()
         self.refresh_dropdown()
 
@@ -98,8 +102,8 @@ class MainWindow(QWidget):
             component.setEnabled(False)
         if self.pomo.is_work_task:
             self.complete_btn.setEnabled(True)
-            self.taskw.toggle_selected_task()
-            self.slack.enable_dnd(n_min=self.pomo.current.value // 60)
+            self.threadpool.start(Worker(self.taskw.toggle_selected_task))
+            self.threadpool.start(Worker(self.slack.enable_dnd, n_min=self.pomo.current.value // 60))
         self._pomo_start_ts = datetime.datetime.now()
         self.main_btn.setText('Stop')
 
@@ -107,8 +111,8 @@ class MainWindow(QWidget):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(True)
         if self.taskw.is_running:
-            self.taskw.toggle_selected_task()
-            self.slack.disable_dnd()
+            self.threadpool.start(Worker(self.taskw.toggle_selected_task))
+            self.threadpool.start(Worker(self.slack.disable_dnd))
         self._pomo_start_ts = None
         self.main_btn.setText('Start')
 
