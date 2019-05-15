@@ -5,6 +5,7 @@ __license__ = 'MIT License'
 import logging
 
 from slack import WebClient
+from slack.errors import SlackApiError
 from tasklib import TaskWarrior
 
 log = logging.getLogger(__name__)
@@ -16,11 +17,18 @@ class Slack:
 
     def disable_dnd(self):
         log.info('Stopping Slack Do-Not-Disturb Mode')
-        self.client.dnd_endSnooze()
+        try:
+            self.client.dnd_endSnooze().validate()
+        except SlackApiError as e:
+            log.error('Unable to stop Slack Do-Not-Disturb mode: %s', e)
 
     def enable_dnd(self, n_min=25):
         log.info('Starting Slack Do-Not-Disturb Mode')
-        self.client.dnd_setSnooze(num_minutes=n_min)
+        try:
+            self.client.dnd_setSnooze(num_minutes=n_min)
+        except SlackApiError as e:
+            log.error('Unable to start Slack Do-Not-Disturb mode: %s', e)
+            
 
 
 class TaskWarrior(TaskWarrior):

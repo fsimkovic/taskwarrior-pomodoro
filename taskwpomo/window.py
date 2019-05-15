@@ -8,6 +8,7 @@ import os
 import unittest.mock
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
@@ -43,7 +44,8 @@ class MainWindow(QWidget):
         self.setLayout(grid)
 
         self.timer_lbl = QLabel(self)
-        font = self.timer_lbl.font()
+        font = QFont('Courier New')
+        font.setBold(True)
         font.setPointSize(70)
         self.timer_lbl.setFont(font)
         grid.addWidget(self.timer_lbl, 0, 0, 3, 2, Qt.AlignCenter)
