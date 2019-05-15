@@ -28,7 +28,6 @@ class Slack:
             self.client.dnd_setSnooze(num_minutes=n_min)
         except SlackApiError as e:
             log.error('Unable to start Slack Do-Not-Disturb mode: %s', e)
-            
 
 
 class TaskWarrior(TaskWarrior):
@@ -52,33 +51,16 @@ class TaskWarrior(TaskWarrior):
         self._selected = None
         self._active = False
 
-    def start_selected_task(self):
-        if self._active:
-            log.debug('Running task detected, not starting another.')
-        else:
-            log.info('Start time monitoring for task "%s"', self._selected)
-            self._selected.start()
-            self._active = True
-
-    def stop_selected_task(self):
+    def toggle_selected_task(self):
         if self._active:
             log.info('Stop time monitoring for task "%s"', self._selected)
             self._selected.stop()
-            self._active = False
         else:
-            log.debug('No running task detected, not stopping.')
+            log.info('Start time monitoring for task "%s"', self._selected)
+            self._selected.start()
+        self._active = not self._active
 
     def select_task(self, pos):
         self._selected = self._displayed[pos]
         log.info('Changing task to "%s"', self._selected)
-
-
-if __name__ == '__main__':
-    import time
-    taskw = TaskWarrior()
-    while True:
-        start = time.time()
-        taskw.tasks2display
-        print(time.time() - start)
-
 

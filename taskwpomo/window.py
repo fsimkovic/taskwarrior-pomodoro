@@ -98,7 +98,7 @@ class MainWindow(QWidget):
             component.setEnabled(False)
         if self.pomo.is_work_task:
             self.complete_btn.setEnabled(True)
-            self.taskw.start_selected_task()
+            self.taskw.toggle_selected_task()
             self.slack.enable_dnd(n_min=self.pomo.current.value // 60)
         self._pomo_start_ts = datetime.datetime.now()
         self.main_btn.setText('Stop')
@@ -107,7 +107,7 @@ class MainWindow(QWidget):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(True)
         if self.taskw.is_running:
-            self.taskw.stop_selected_task()
+            self.taskw.toggle_selected_task()
             self.slack.disable_dnd()
         self._pomo_start_ts = None
         self.main_btn.setText('Start')
