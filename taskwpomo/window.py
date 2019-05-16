@@ -10,7 +10,6 @@ import unittest.mock
 from PyQt5.Qt import QThreadPool
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from taskwpomo.config import options
@@ -19,8 +18,6 @@ from taskwpomo.pomo import Pomodoro
 from taskwpomo.worker import Worker
 
 log = logging.getLogger(__name__)
-
-READY_SOUND = os.path.join(os.path.dirname(__file__), 'data', 'ding.wav')
 
 
 class MainWindow(QWidget):
@@ -36,7 +33,6 @@ class MainWindow(QWidget):
 
         # TODO: refactor this logic out of here
         self._pomo_start_ts = None
-        #  self.chime = QSound(READY_SOUND)
 
         self.initUI()
 
@@ -137,9 +133,7 @@ class MainWindow(QWidget):
         log.debug('Current pomodoro time: %s', pomo)
         if self._pomo_start_ts:
             pomo = (self._pomo_start_ts + pomo) - datetime.datetime.now()
-        if pomo.seconds > 0:
-            self.timer_lbl.setText("{:02}:{:02}".format(pomo.seconds // 60, pomo.seconds % 60))
-        else:
+        self.timer_lbl.setText("{:02}:{:02}".format(pomo.seconds // 60, pomo.seconds % 60))
+        if pomo.seconds <= 0:
             self.threadpool.start(Worker(self.pomo.complete))
-            #  self.threadpool.start(Worker(self.chime.play))
             self.stop_session()
