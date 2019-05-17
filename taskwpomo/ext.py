@@ -43,7 +43,7 @@ class TaskWarrior(TaskWarrior):
 
     @property
     def tasks2display(self):
-        self._displayed = self.tasks.pending()
+        self._displayed = sorted(self.tasks.pending(), key=lambda t: t._data['urgency'], reverse=True)
         return self._displayed
 
     def complete_selected_task(self):

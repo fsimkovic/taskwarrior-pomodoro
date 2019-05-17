@@ -62,6 +62,7 @@ class MainWindow(QWidget):
 
         self.dropdown = QComboBox()
         self.dropdown.currentIndexChanged.connect(self.taskw.select_task)
+        self.dropdown.setMinimumWidth(250)
         grid.addWidget(self.dropdown, 4, 0, Qt.AlignCenter)
 
         self.complete_btn = QPushButton('Completed', self)
@@ -113,20 +114,22 @@ class MainWindow(QWidget):
         self.main_btn.setText('Start')
 
     def refresh_dropdown(self):
-        # TODO: this is super hacky, we must be able to do better
-        displayed = set(); i = 0
-        while True:
-            value = self.dropdown.itemText(i).strip()
-            if value:
-                displayed.add(value); i += 1
-            else:
-                break
+        def inner():
+            # TODO: this is super hacky, we must be able to do better
+            displayed = set(); i = 0
+            while True:
+                value = self.dropdown.itemText(i).strip()
+                if value:
+                    displayed.add(value); i += 1
+                else:
+                    break
 
-        labels = [str(t) for t in self.taskw.tasks2display]
-        if self._pomo_start_ts is None and set(labels) != displayed:
-            self.dropdown.clear()
-            self.dropdown.addItems(labels)
-            self.dropdown.setCurrentIndex(0)
+            labels = [str(t) for t in self.taskw.tasks2display]
+            if self._pomo_start_ts is None and set(labels) != displayed:
+                self.dropdown.clear()
+                self.dropdown.addItems(labels)
+                self.dropdown.setCurrentIndex(0)
+        self.threadpool.start(Worker(inner))
 
     def update_timer_lbl(self):
         pomo = datetime.timedelta(seconds=self.pomo.current.value)
