@@ -61,6 +61,7 @@ class MainWindow(QWidget):
         grid.addWidget(self.reset_btn, 2, 3, 1, 1)
 
         self.dropdown = QComboBox()
+        self.dropdown.setMaximumWidth(250)
         self.dropdown.currentIndexChanged.connect(self.taskw.select_task)
         grid.addWidget(self.dropdown, 4, 0, Qt.AlignCenter)
 
