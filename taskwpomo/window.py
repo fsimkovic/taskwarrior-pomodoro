@@ -5,37 +5,26 @@ __license__ = 'MIT License'
 import datetime
 import logging
 import os
-import unittest.mock
 
 from PyQt5.Qt import QThreadPool
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
-from taskwpomo.config import options
-from taskwpomo.slacky import Slack
-from taskwpomo.taskw import TaskWarrior
 from taskwpomo.misc import log_call
-from taskwpomo.pomo import Pomodoro
 from taskwpomo.worker import Worker
 
 log = logging.getLogger(__name__)
 
 
 class MainWindow(QWidget):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
 
-        self.pomo = Pomodoro()
-        if 'slack-token' in options:
-            self.slack = Slack(token=options['slack-token'])
-        else:
-            self.slack = unittest.mock.Mock()
-        self.taskw = TaskWarrior()
-        self._current_dropdown_tasks = []
+        self.controller = controller
 
-        # TODO: refactor this logic out of here
         self._pomo_start_ts = None
+        self._current_dropdown_tasks = []
         self._taskw_sel_task = None
 
         self.initUI()
@@ -89,16 +78,17 @@ class MainWindow(QWidget):
     @log_call
     def on_click_complete_btn(self, _):
         self.stop_session()
-        self.taskw.complete_task(self._taskw_sel_task)
+        self.controller.taskw.complete_task(self._taskw_sel_task)
+        self.refresh_dropdown()
 
     @log_call
     def on_click_skip_btn(self, _):
-        self.pomo.skip()
+        self.controller.pomo.skip()
         self.update_timer_lbl()
 
     @log_call
     def on_click_reset_btn(self, _):
-        self.pomo.reset()
+        self.controller.pomo.reset()
         self.update_timer_lbl()
 
     @log_call
@@ -110,10 +100,10 @@ class MainWindow(QWidget):
     def start_session(self):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(False)
-        if self.pomo.is_work_task:
-            self.complete_btn.setEnabled(True)
-            self.threadpool.start(Worker(self.taskw.start_task, self._taskw_sel_task))
-            self.threadpool.start(Worker(self.slack.enable_dnd, n_min=self.pomo.current.value // 60))
+        if self.controller.pomo.is_work_task:
+            #  self.complete_btn.setEnabled(True)
+            self.threadpool.start(Worker(self.controller.taskw.start_task, self._taskw_sel_task))
+            self.threadpool.start(Worker(self.controller.slack.enable_dnd, n_min=self.controller.pomo.current.value // 60))
         self._pomo_start_ts = datetime.datetime.now()
         self.main_btn.setText('Stop')
 
@@ -121,28 +111,31 @@ class MainWindow(QWidget):
     def stop_session(self):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(True)
-        if self.taskw.is_running:
-            self.threadpool.start(Worker(self.taskw.stop_task, self._taskw_sel_task))
-            self.threadpool.start(Worker(self.slack.disable_dnd))
+        if self.controller.taskw.is_running:
+            self.threadpool.start(Worker(self.controller.taskw.stop_task, self._taskw_sel_task))
+            self.threadpool.start(Worker(self.controller.slack.disable_dnd))
         self._pomo_start_ts = None
         self.main_btn.setText('Start')
 
     @log_call
     def refresh_dropdown(self):
-        self.taskw.refresh()
-        if self._pomo_start_ts is None and self.taskw.tasks != self._current_dropdown_tasks:
-            log.info('Refreshing dropdown menu')
-            self._current_dropdown_tasks = self.taskw.tasks
-            self.dropdown.clear()
-            self.dropdown.addItems([t.description for t in self._current_dropdown_tasks])
+        if self._pomo_start_ts is None:
+            log.info('Considering a dropdown list refresh')
+            self.controller.taskw.refresh()
+            new_tasks = self.controller.taskw.tasks
+            if new_tasks != self._current_dropdown_tasks:
+                log.info('Refreshing dropdown list')
+                self._current_dropdown_tasks = new_tasks
+                self.dropdown.clear()
+                self.dropdown.addItems([t.description for t in self._current_dropdown_tasks])
 
     @log_call
     def update_timer_lbl(self):
-        pomo = datetime.timedelta(seconds=self.pomo.current.value)
+        pomo = datetime.timedelta(seconds=self.controller.pomo.current.value)
         log.debug('Current pomodoro time: %s', pomo)
         if self._pomo_start_ts:
             pomo = (self._pomo_start_ts + pomo) - datetime.datetime.now()
         self.timer_lbl.setText("{:02}:{:02}".format(pomo.seconds // 60, pomo.seconds % 60))
         if pomo.seconds <= 0:
-            self.threadpool.start(Worker(self.pomo.complete))
+            self.threadpool.start(Worker(self.controller.pomo.complete))
             self.stop_session()

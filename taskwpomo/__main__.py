@@ -9,6 +9,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from taskwpomo import APPLICATION_NAME
+from taskwpomo.controller import MainController
 from taskwpomo.timer import Timer
 from taskwpomo.window import MainWindow
 
@@ -25,7 +26,8 @@ if __name__ == '__main__':
 
     app = QApplication([])
     app.setApplicationName(APPLICATION_NAME)
-    window = MainWindow()
+    controller = MainController()
+    window = MainWindow(controller)
     window.show()
 
     t1 = Timer(window.refresh_dropdown)

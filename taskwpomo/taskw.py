@@ -5,9 +5,12 @@ __license__ = 'MIT License'
 import heapq
 import io
 import json
+import logging
 import os
 import subprocess
 import typing
+
+log = logging.getLogger(__name__)
 
 
 class Task(typing.NamedTuple):
@@ -50,20 +53,22 @@ class TaskWarrior:
             'status:pending'
         ]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=1, universal_newlines=True)
-
         self.tasks = []
         for line in proc.stdout:
             data = json.loads(line)
             heapq.heappush(self.tasks, Task(**{k: (data[k] if k in data else '') for k in Task._fields}))
 
     def complete_task(self, task):
-        subprocess.call(['task', task.uuid, 'done'])
+        log.info('Marking task "%s" as done', task.description)
+        subprocess.Popen(['task', task.uuid, 'done'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self._is_running = False
 
     def start_task(self, task):
-        subprocess.call(['task', task.uuid, 'start'])
+        log.info('Starting task "%s" time tracking', task.description)
+        subprocess.Popen(['task', task.uuid, 'start'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self._is_running = True
 
     def stop_task(self, task):
-        subprocess.call(['task', task.uuid, 'stop'])
+        log.info('Stopping task "%s" time tracking', task.description)
+        subprocess.Popen(['task', task.uuid, 'stop'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self._is_running = False
