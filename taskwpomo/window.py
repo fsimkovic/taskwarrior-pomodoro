@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushBu
 
 from taskwpomo.config import options
 from taskwpomo.ext import Slack, TaskWarrior
+from taskwpomo.misc import log_call
 from taskwpomo.pomo import Pomodoro
 from taskwpomo.worker import Worker
 
@@ -61,6 +62,7 @@ class MainWindow(QWidget):
         grid.addWidget(self.reset_btn, 2, 3, 1, 1)
 
         self.dropdown = QComboBox()
+        self.dropdown.setMinimumWidth(250)
         self.dropdown.setMaximumWidth(250)
         self.dropdown.currentIndexChanged.connect(self.taskw.select_task)
         grid.addWidget(self.dropdown, 4, 0, Qt.AlignCenter)
@@ -74,26 +76,29 @@ class MainWindow(QWidget):
         self.update_timer_lbl()
         self.refresh_dropdown()
 
+    @log_call
     def on_click_main_btn(self):
         if self.main_btn.text() == 'Start':
             self.start_session()
         else:
             self.stop_session()
 
+    @log_call
     def on_click_complete_btn(self):
         self.stop_session()
         self.taskw.complete_selected_task()
 
+    @log_call
     def on_click_skip_btn(self):
-        log.info('Skip pomodoro session')
         self.pomo.skip()
         self.update_timer_lbl()
 
+    @log_call
     def on_click_reset_btn(self):
-        log.info('Reset pomodoro sequence')
         self.pomo.reset()
         self.update_timer_lbl()
 
+    @log_call
     def start_session(self):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(False)
@@ -104,6 +109,7 @@ class MainWindow(QWidget):
         self._pomo_start_ts = datetime.datetime.now()
         self.main_btn.setText('Stop')
 
+    @log_call
     def stop_session(self):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(True)
@@ -113,8 +119,8 @@ class MainWindow(QWidget):
         self._pomo_start_ts = None
         self.main_btn.setText('Start')
 
+    @log_call
     def refresh_dropdown(self):
-        # TODO: this is super hacky, we must be able to do better
         displayed = set(); i = 0
         while True:
             value = self.dropdown.itemText(i).strip()
@@ -125,10 +131,12 @@ class MainWindow(QWidget):
 
         labels = [str(t) for t in self.taskw.tasks2display]
         if self._pomo_start_ts is None and set(labels) != displayed:
+            log.info('Refreshing dropdown menu')
             self.dropdown.clear()
             self.dropdown.addItems(labels)
             self.dropdown.setCurrentIndex(0)
 
+    @log_call
     def update_timer_lbl(self):
         pomo = datetime.timedelta(seconds=self.pomo.current.value)
         log.debug('Current pomodoro time: %s', pomo)

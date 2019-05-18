@@ -7,6 +7,8 @@ import enum
 import logging
 import time
 
+from taskwpomo.misc import log_call
+
 log = logging.getLogger(__name__)
 
 
@@ -54,15 +56,18 @@ class Pomodoro:
         if self._cur_index < len(self.STEPS) - 1:
             return self.STEPS[self._cur_index + 1]
 
+    @log_call
     def complete(self):
         if self._cur_index < len(self.STEPS) - 1:
             self._cur_index += 1
         else:
             self.reset()
 
+    @log_call
     def reset(self):
         self._cur_index = 0
 
+    @log_call
     def skip(self):
         self.complete()
 
