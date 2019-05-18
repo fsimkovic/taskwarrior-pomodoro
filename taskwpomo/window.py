@@ -13,7 +13,8 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from taskwpomo.config import options
-from taskwpomo.ext import Slack, TaskWarrior
+from taskwpomo.slacky import Slack
+from taskwpomo.taskw import TaskWarrior
 from taskwpomo.misc import log_call
 from taskwpomo.pomo import Pomodoro
 from taskwpomo.worker import Worker
@@ -31,9 +32,11 @@ class MainWindow(QWidget):
         else:
             self.slack = unittest.mock.Mock()
         self.taskw = TaskWarrior()
+        self._current_dropdown_tasks = []
 
         # TODO: refactor this logic out of here
         self._pomo_start_ts = None
+        self._taskw_sel_task = None
 
         self.initUI()
 
@@ -64,7 +67,7 @@ class MainWindow(QWidget):
         self.dropdown = QComboBox()
         self.dropdown.setMinimumWidth(250)
         self.dropdown.setMaximumWidth(250)
-        self.dropdown.currentIndexChanged.connect(self.taskw.select_task)
+        self.dropdown.currentIndexChanged.connect(self.on_change_select_task)
         grid.addWidget(self.dropdown, 4, 0, Qt.AlignCenter)
 
         self.complete_btn = QPushButton('Completed', self)
@@ -77,26 +80,31 @@ class MainWindow(QWidget):
         self.refresh_dropdown()
 
     @log_call
-    def on_click_main_btn(self):
+    def on_click_main_btn(self, _):
         if self.main_btn.text() == 'Start':
             self.start_session()
         else:
             self.stop_session()
 
     @log_call
-    def on_click_complete_btn(self):
+    def on_click_complete_btn(self, _):
         self.stop_session()
-        self.taskw.complete_selected_task()
+        self.taskw.complete_task(self._taskw_sel_task)
 
     @log_call
-    def on_click_skip_btn(self):
+    def on_click_skip_btn(self, _):
         self.pomo.skip()
         self.update_timer_lbl()
 
     @log_call
-    def on_click_reset_btn(self):
+    def on_click_reset_btn(self, _):
         self.pomo.reset()
         self.update_timer_lbl()
+
+    @log_call
+    def on_change_select_task(self, i):
+        self._taskw_sel_task = self._current_dropdown_tasks[i]
+        log.info('Changed selected task to "%s"', self._taskw_sel_task.description)
 
     @log_call
     def start_session(self):
@@ -104,7 +112,7 @@ class MainWindow(QWidget):
             component.setEnabled(False)
         if self.pomo.is_work_task:
             self.complete_btn.setEnabled(True)
-            self.threadpool.start(Worker(self.taskw.toggle_selected_task))
+            self.threadpool.start(Worker(self.taskw.start_task, self._taskw_sel_task))
             self.threadpool.start(Worker(self.slack.enable_dnd, n_min=self.pomo.current.value // 60))
         self._pomo_start_ts = datetime.datetime.now()
         self.main_btn.setText('Stop')
@@ -114,27 +122,19 @@ class MainWindow(QWidget):
         for component in [self.complete_btn, self.skip_btn, self.reset_btn, self.dropdown]:
             component.setEnabled(True)
         if self.taskw.is_running:
-            self.threadpool.start(Worker(self.taskw.toggle_selected_task))
+            self.threadpool.start(Worker(self.taskw.stop_task, self._taskw_sel_task))
             self.threadpool.start(Worker(self.slack.disable_dnd))
         self._pomo_start_ts = None
         self.main_btn.setText('Start')
 
     @log_call
     def refresh_dropdown(self):
-        displayed = set(); i = 0
-        while True:
-            value = self.dropdown.itemText(i).strip()
-            if value:
-                displayed.add(value); i += 1
-            else:
-                break
-
-        labels = [str(t) for t in self.taskw.tasks2display]
-        if self._pomo_start_ts is None and set(labels) != displayed:
+        self.taskw.refresh()
+        if self._pomo_start_ts is None and self.taskw.tasks != self._current_dropdown_tasks:
             log.info('Refreshing dropdown menu')
+            self._current_dropdown_tasks = self.taskw.tasks
             self.dropdown.clear()
-            self.dropdown.addItems(labels)
-            self.dropdown.setCurrentIndex(0)
+            self.dropdown.addItems([t.description for t in self._current_dropdown_tasks])
 
     @log_call
     def update_timer_lbl(self):

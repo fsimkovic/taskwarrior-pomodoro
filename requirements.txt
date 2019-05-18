@@ -2,4 +2,3 @@ pyobjc-framework-Cocoa
 pyqt5
 pyyaml
 slackclient
-tasklib
