@@ -56,7 +56,7 @@ class TaskWarrior:
         self.tasks = []
         for line in proc.stdout:
             data = json.loads(line)
-            heapq.heappush(self.tasks, Task(**{k: (data[k] if k in data else '') for k in Task._fields}))
+            heapq.heappush(self.tasks, Task(**{k: data.get(k, '') for k in Task._fields}))
 
     def complete_task(self, task):
         log.info('Marking task "%s" as done', task.description)
